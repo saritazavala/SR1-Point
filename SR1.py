@@ -23,15 +23,56 @@ def color(r, g, b):
 class Render(object):
 
     def __init__(self, width, height):
+        self.viewport_x = 0
+        self.viewport_y = 0
         self.width = width
         self.height = height
-        self.clear()
+        self.Vheight = 100
+        self.Vwidth = 100
+        self.framebuffer = []
+        self.clear_color = color(255,204,243)
+        self.col = color(0,0,0)
+        self.glClear()
 
-    def clear(self):
-        self.pixels = [
-            [color(0, 0, 255) for x in range(self.width)] 
+    def glClear(self):
+        self.framebuffer = [
+            [self.clear_color for x in range(self.width)]
             for y in range(self.height)
-    ]
+        ]
+
+    def glClearColor(self, r, g, b):
+        self.clear_color = color(
+            int(round(r*255)),
+            int(round(g*255)),
+            int(round(b*255)))
+
+
+    def glCreateWindow(self, width, height):
+        self.height = height
+        self.width = width
+
+    def glColor(self, r,g,b):
+        self.col = color(
+            int(round(r*255)),
+            int(round(g*255)),
+            int(round(b*255)))
+
+    def glViewPort(self, height,width,x,y):
+        self.Vheight = height
+        self.Vwidth = width
+        self.viewport_x = x
+        self.viewport_y = y
+
+
+
+    def point(self,x,y):
+        self.framebuffer[x][y] = color(0,0,0)
+
+    
+    def glVertex(self, x, y):
+        vertex_x = round((x+1) * (self.Vwidth/2) + self.viewport_x)
+        vertex_y= round((y+1) * (self.Vheight/2) + self.viewport_y)
+        self.point(vertex_x, vertex_y)     
 
 
     def write(self, filename):
@@ -60,20 +101,19 @@ class Render(object):
         #Pixel data
         for x in range(self.height):
             for y in range(self.width):
-                f.write(self.pixels[x][y])
+                f.write(self.framebuffer[x][y])
         f.close()
-
-    def point(self,x,y):
-        self.pixels[x][y] = color(0,0,0)
-
-        
-    
-
 
 
 render = Render(800,600)
-render.point(0,0)
-render.write("prueba.bmp")
+render.glCreateWindow = (300,300)
+render.glColor(1,1,0)
+render.glViewPort(100, 100, 100 ,100)
+render.glClearColor(1,0,1)
+render.glVertex(0, 0) 
+render.glVertex(1, 0) 
+
+render.write("final.bmp")
 
 
 
