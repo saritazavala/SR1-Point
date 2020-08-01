@@ -17,21 +17,17 @@ def dword(c):
     return struct.pack('=l', c)
 
 def color(r, g, b):
-    return bytes([b, g, r])
+    return bytes([round(b * 255), round(g * 255), round(r * 255)])
 
 
 class Render(object):
 
     def __init__(self, width, height):
-        self.viewport_x = 0
-        self.viewport_y = 0
+ 
         self.width = width
         self.height = height
-        self.Vheight = 100
-        self.Vwidth = 100
         self.framebuffer = []
-        self.clear_color = color(255,204,243)
-        self.col = color(0,0,0)
+        self.clear_color = color(0.5,1,0.7)
         self.glClear()
 
     def glClear(self):
@@ -39,30 +35,23 @@ class Render(object):
             [self.clear_color for x in range(self.width)]
             for y in range(self.height)
         ]
-
-    def glClearColor(self, r, g, b):
-        self.clear_color = color(
-            int(round(r*255)),
-            int(round(g*255)),
-            int(round(b*255)))
+    
+    def glClearColor(self, r,g,b):
+        self.current_color = color(r, g, b)
 
 
     def glCreateWindow(self, width, height):
         self.height = height
         self.width = width
 
-    def glColor(self, r,g,b):
-        self.col = color(
-            int(round(r*255)),
-            int(round(g*255)),
-            int(round(b*255)))
+    def glColor(self, r, g, b):
+        self.current_color = color(r, g, b)
 
-    def glViewPort(self, height,width,x,y):
-        self.Vheight = height
-        self.Vwidth = width
-        self.viewport_x = x
-        self.viewport_y = y
-
+    def glViewPort(self, x, y, width, height):
+        self.xViewPort = x
+        self.yViewPort = y
+        self.widthViewPort = width
+        self.heightViewPort = height
 
 
     def point(self,x,y):
@@ -70,9 +59,11 @@ class Render(object):
 
     
     def glVertex(self, x, y):
-        vertex_x = round((x+1) * (self.Vwidth/2) + self.viewport_x)
-        vertex_y= round((y+1) * (self.Vheight/2) + self.viewport_y)
-        self.point(vertex_x, vertex_y)     
+        x_temp = int(round(self.widthViewPort/2 + x * self.widthViewPort/2))
+        y_temp =  int(round(self.heightViewPort/2 + y * self.heightViewPort/2))
+        x_point = self.xViewPort + x_temp
+        y_point = self.yViewPort + y_temp
+        self.point(round(x_point),round(y_point)) 
 
 
     def write(self, filename):
@@ -105,15 +96,17 @@ class Render(object):
         f.close()
 
 
-render = Render(800,600)
-render.glCreateWindow = (300,300)
-render.glColor(1,1,0)
-render.glViewPort(100, 100, 100 ,100)
+render = Render(100,100)
+render.glCreateWindow = (100,100)
+render.glColor(1,0.1,0.1)
+render.glViewPort(25, 25, 50 ,50)
 render.glClearColor(1,0,1)
 render.glVertex(0, 0) 
-render.glVertex(1, 0) 
 
-render.write("final.bmp")
+render.write("AhoraSi.bmp")
+
+
+
 
 
 
