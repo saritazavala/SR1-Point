@@ -17,96 +17,118 @@ def dword(c):
     return struct.pack('=l', c)
 
 def color(red, green, blue):
-    return bytes(
-        [round(blue * 255), 
-        round(green * 255), 
-        round(red * 255)]
-    )
+    return bytes( [blue, green,red ])
 
 
 class Render(object):
 
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
+    #Initial values -------------------------------
+
+    def __init__(self, width, height, filename):
+        self.width = 0
+        self.height = 0
         self.framebuffer = []
-        self.actual_color = color(0.5,1,0.7)
+        self.change_color = color(0,0,255)
+        self.filename = filename
+        self.x_position = 0
+        self.y_position = 0
+        self.ViewPort_height = 0
+        self.ViewPort_width = 0
         self.glClear()
 
-
-    def glClear(self):
-        self.framebuffer = [
-            [self.actual_color for x in range(self.width)]
-            for y in range(self.height)
-        ]
     
-    def glClearColor(self, red, green, blue ):
-        self.actual_color = color(red, green, blue)
+    #File Header ----------------------------------
 
-
-    def glCreateWindow(self, width, height):
-        self.height = height
-        self.width = width
-
-    def glColor(self, red, green, blue):
-        self.actual_color = color(red, green, blue)
-
-    def glViewPort(self, x, y, width, height):
-        self.xViewPort = x
-        self.yViewPort = y
-        self.widthViewPort = width
-        self.heightViewPort = height
-
-
-    def point(self,x,y):
-        self.framebuffer[x][y] = color(0,0,0)
-
-    
-    def glVertex(self, x, y):
-        x_temp = int(round(self.widthViewPort/2 + x * self.widthViewPort/2))
-        y_temp =  int(round(self.heightViewPort/2 + y * self.heightViewPort/2))
-        x_point = self.xViewPort + x_temp
-        y_point = self.yViewPort + y_temp
-        self.point( round(x_point), round(y_point)) 
-
-
-    def write(self, filename):
-        doc = open(filename, 'bw')
-        total_size = 14 + 40
-
-        #File header
+    def header(self):
+        doc = open(self.filename,'bw')
         doc.write(char('B'))
         doc.write(char('M'))
-        doc.write(dword( total_size + self.width + self.height * 3 ))
+        doc.write(dword(54 + self.width * self.height * 3))
         doc.write(dword(0))
-        doc.write(dword(total_size))
+        doc.write(dword(54))
+        self.info(doc)
+        
+        
+    #Info header ---------------------------------------
 
-        #info header
+    def info(self, doc):
         doc.write(dword(40))
         doc.write(dword(self.width))
         doc.write(dword(self.height))
         doc.write(word(1))
         doc.write(word(24))
         doc.write(dword(0))
-        doc.write(dword( self.width * self.height * 3 ))
+        doc.write(dword(self.width * self.height * 3))
         doc.write(dword(0))
         doc.write(dword(0))
         doc.write(dword(0))
         doc.write(dword(0))
-
-        #Pixel data
-        for x in range(self.height):
-            for y in range(self.width):
-                doc.write(self.framebuffer[x][y])
+        
+        #Image ----------------------------------
+        for x in range(self.width):
+            for y in range(self.height):
+                doc.write(self.framebuffer[y][x])
         doc.close()
 
-#Prueba con un punto en medio
-render = Render(100,100)
-render.glCreateWindow(100,100)
-render.glViewPort(25, 25, 50 ,50)
-render.glClearColor(1,0.1,1)
-render.glClear()
-render.glColor(1,0.1,0.1)
-render.glVertex(0, 0) 
-render.write("Final.bmp")
+    #Cleans a full image with the color defined in "change_color"
+    def glClear(self):
+        
+        self.framebuffer = [
+            [self.change_color for x in range(self.width)]
+            for y in range(self.height)
+        ]
+
+    #Takes a new color  
+    def glClearColor(self, red,blue,green):
+        self.change_color = color(red, blue, green)
+
+    #Writes all the doc
+    def glFinish(self):
+        self.header()
+    
+    def glColor(self, r, g, b):
+        self.change_color = color(r, g, b)
+
+    #Draws a point according ot frameBuffer
+    def glpoint(self, x, y):
+        self.framebuffer[y][x] = self.change_color
+
+    #Creates a window 
+    def glCreateWindow(self, width, height):
+        self.width = width
+        self.height = height
+
+    #Defines the area where will be able to draw
+    def glViewPort(self, x_position, y_position, ViewPort_height, ViewPort_width):
+        self.x_position = x_position
+        self.y_position = y_position
+        self.ViewPort_height = ViewPort_height
+        self.ViewPort_width = ViewPort_width
+
+    def glVertex(self, x, y):
+        x_Vertex = self.x_position + int(round( self.ViewPort_width/2 + x * self.ViewPort_width/2 ))
+        y_Vertex = self.y_position + int(round(self.ViewPort_height/2 + y * self.ViewPort_height/2 ))
+        self.glpoint(round(x_Vertex), round(y_Vertex))
+
+
+#Crear Render
+r = Render(100,100, 'FINAL.bmp')
+#Crear pantalla
+r.glCreateWindow(100,100)
+#Se delimita el arrea donde si se va a poder dibujar
+r.glViewPort(25, 25, 50 ,50)
+#Tomo el bote de pintura de este color
+r.glClearColor(255,0,0)
+#Echo el bote de pintura y pinto todo
+r.glClear()
+#Dibujo mi punto en el centrp
+r.glColor(0,0,0)
+r.glVertex(0,0) 
+#Termino y escribo todo
+r.glFinish()
+
+
+        
+        
+        
 
