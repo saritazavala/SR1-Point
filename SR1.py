@@ -16,36 +16,40 @@ def word(c):
 def dword(c):
     return struct.pack('=l', c)
 
-def color(r, g, b):
-    return bytes([round(b * 255), round(g * 255), round(r * 255)])
+def color(red, green, blue):
+    return bytes(
+        [round(blue * 255), 
+        round(green * 255), 
+        round(red * 255)]
+    )
 
 
 class Render(object):
 
     def __init__(self, width, height):
- 
         self.width = width
         self.height = height
         self.framebuffer = []
-        self.clear_color = color(0.5,1,0.7)
+        self.actual_color = color(0.5,1,0.7)
         self.glClear()
+
 
     def glClear(self):
         self.framebuffer = [
-            [self.clear_color for x in range(self.width)]
+            [self.actual_color for x in range(self.width)]
             for y in range(self.height)
         ]
     
-    def glClearColor(self, r,g,b):
-        self.current_color = color(r, g, b)
+    def glClearColor(self, red, green, blue ):
+        self.actual_color = color(red, green, blue)
 
 
     def glCreateWindow(self, width, height):
         self.height = height
         self.width = width
 
-    def glColor(self, r, g, b):
-        self.current_color = color(r, g, b)
+    def glColor(self, red, green, blue):
+        self.actual_color = color(red, green, blue)
 
     def glViewPort(self, x, y, width, height):
         self.xViewPort = x
@@ -63,63 +67,46 @@ class Render(object):
         y_temp =  int(round(self.heightViewPort/2 + y * self.heightViewPort/2))
         x_point = self.xViewPort + x_temp
         y_point = self.yViewPort + y_temp
-        self.point(round(x_point),round(y_point)) 
+        self.point( round(x_point), round(y_point)) 
 
 
     def write(self, filename):
-        f = open(filename, 'bw')
+        doc = open(filename, 'bw')
+        total_size = 14 + 40
 
         #File header
-        f.write(char('B'))
-        f.write(char('M'))
-        f.write(dword(14+40+self.width+self.height*3))
-        f.write(dword(0))
-        f.write(dword(14 + 40))
+        doc.write(char('B'))
+        doc.write(char('M'))
+        doc.write(dword( total_size + self.width + self.height * 3 ))
+        doc.write(dword(0))
+        doc.write(dword(total_size))
 
         #info header
-        f.write(dword(40))
-        f.write(dword(self.width))
-        f.write(dword(self.height))
-        f.write(word(1))
-        f.write(word(24))
-        f.write(dword(0))
-        f.write(dword(self.width * self.height * 3))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
-        f.write(dword(0))
+        doc.write(dword(40))
+        doc.write(dword(self.width))
+        doc.write(dword(self.height))
+        doc.write(word(1))
+        doc.write(word(24))
+        doc.write(dword(0))
+        doc.write(dword( self.width * self.height * 3 ))
+        doc.write(dword(0))
+        doc.write(dword(0))
+        doc.write(dword(0))
+        doc.write(dword(0))
 
         #Pixel data
         for x in range(self.height):
             for y in range(self.width):
-                f.write(self.framebuffer[x][y])
-        f.close()
+                doc.write(self.framebuffer[x][y])
+        doc.close()
 
-
+#Prueba con un punto en medio
 render = Render(100,100)
-render.glCreateWindow = (100,100)
-render.glColor(1,0.1,0.1)
+render.glCreateWindow(100,100)
 render.glViewPort(25, 25, 50 ,50)
-render.glClearColor(1,0,1)
+render.glClearColor(1,0.1,1)
+render.glClear()
+render.glColor(1,0.1,0.1)
 render.glVertex(0, 0) 
-
-render.write("AhoraSi.bmp")
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
+render.write("Final.bmp")
 
