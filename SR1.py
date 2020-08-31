@@ -28,7 +28,7 @@ class Render(object):
         self.width = 0
         self.height = 0
         self.framebuffer = []
-        self.change_color = color(0,0,255)
+        self.change_color = color(0,0,1)
         self.filename = filename
         self.x_position = 0
         self.y_position = 0
@@ -80,14 +80,14 @@ class Render(object):
 
     #Takes a new color  
     def glClearColor(self, red,blue,green):
-        self.change_color = color(red, blue, green)
+        self.change_color = color(int(round(red*255)),int(round(green*255)),int(round(blue*255)))
 
     #Writes all the doc
     def glFinish(self):
         self.header()
     
-    def glColor(self, r, g, b):
-        self.change_color = color(r, g, b)
+    def glColor(self, red, green, blue):
+        self.change_color = color(int(round(red*255)),int(round(green*255)),int(round(blue*255)))
 
     #Draws a point according ot frameBuffer
     def glpoint(self, x, y):
@@ -118,7 +118,7 @@ r.glCreateWindow(100,100)
 #Se delimita el arrea donde si se va a poder dibujar
 r.glViewPort(25, 25, 50 ,50)
 #Tomo el bote de pintura de este color
-r.glClearColor(255,0,0)
+r.glClearColor(1,0,0)
 #Echo el bote de pintura y pinto todo
 r.glClear()
 #Dibujo mi punto en el centrp
